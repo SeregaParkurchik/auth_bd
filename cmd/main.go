@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	gorillaHandlers "github.com/gorilla/handlers"
 )
 
 func main() {
@@ -33,6 +35,11 @@ func main() {
 	userHandler := handlers.NewUserHandler(authService)
 
 	mux := routes.InitRoutes(userHandler)
+	corsObj := gorillaHandlers.AllowedOrigins([]string{"*"}) // Разрешить все источники
+	corsHeaders := gorillaHandlers.AllowedHeaders([]string{"Content-Type", "Accept"})
+	corsMethods := gorillaHandlers.AllowedMethods([]string{"POST", "OPTIONS"})
+
+	// Запуск сервера с CORS
 	fmt.Println("Запуск сервера на порту 8080 http://localhost:8080/")
-	http.ListenAndServe(":8080", mux)
+	log.Fatal(http.ListenAndServe(":8080", gorillaHandlers.CORS(corsObj, corsHeaders, corsMethods)(mux)))
 }

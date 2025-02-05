@@ -1,11 +1,11 @@
-fetch('http://localhost:8080/api/register', {
+fetch('http://localhost:8080/register', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        email: 'serega@mail.ru',
-        password: '123456',
+        email: 'maria@mail.ru',
+        password: '2000',
         user_type: 'client'
     })
 })

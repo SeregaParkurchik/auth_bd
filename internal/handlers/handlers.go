@@ -6,6 +6,7 @@ import (
 	"avito_test/internal/models"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 type UserHandler struct {
@@ -30,6 +31,14 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
+
+	cookie := &http.Cookie{
+		Name:    "session_id",
+		Value:   tokenString,
+		Expires: time.Now().Add(12 * time.Hour),
+	}
+	http.SetCookie(w, cookie)
+
 	response := auth.RegisterResponse{AccessToken: tokenString}
 
 	w.WriteHeader(http.StatusCreated)
@@ -50,8 +59,24 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
+
+	cookie := &http.Cookie{
+		Name:    "session_id",
+		Value:   tokenString,
+		Expires: time.Now().Add(12 * time.Hour),
+	}
+	http.SetCookie(w, cookie)
+
 	response := auth.RegisterResponse{AccessToken: tokenString}
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+}
+
+func (h *UserHandler) FlatCreate(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *UserHandler) HouseCreate(w http.ResponseWriter, r *http.Request) {
+
 }
