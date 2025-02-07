@@ -5,8 +5,8 @@ import (
 	"avito_test/internal/core"
 	"avito_test/internal/models"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
 )
 
 type UserHandler struct {
@@ -32,13 +32,6 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie := &http.Cookie{
-		Name:    "session_id",
-		Value:   tokenString,
-		Expires: time.Now().Add(12 * time.Hour),
-	}
-	http.SetCookie(w, cookie)
-
 	response := auth.RegisterResponse{AccessToken: tokenString}
 
 	w.WriteHeader(http.StatusCreated)
@@ -60,13 +53,6 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie := &http.Cookie{
-		Name:    "session_id",
-		Value:   tokenString,
-		Expires: time.Now().Add(12 * time.Hour),
-	}
-	http.SetCookie(w, cookie)
-
 	response := auth.RegisterResponse{AccessToken: tokenString}
 
 	w.WriteHeader(http.StatusCreated)
@@ -78,5 +64,14 @@ func (h *UserHandler) FlatCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) HouseCreate(w http.ResponseWriter, r *http.Request) {
+	var newHouse models.House
+
+	// Декодируем JSON из тела запроса
+	if err := json.NewDecoder(r.Body).Decode(&newHouse); err != nil {
+		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
+		return
+	}
+	house, _ := h.service.HouseCreate(r.Context(), &newHouse)
+	fmt.Println(house)
 
 }

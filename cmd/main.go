@@ -15,12 +15,12 @@ import (
 
 func main() {
 	cfg := storage.PostgresConnConfig{
-		DBHost:   "localhost", //localhost, host.docker.internal
+		DBHost:   "localhost",
 		DBPort:   5432,
 		DBName:   "avito",
 		Username: "avito_admin",
 		Password: "qwerty",
-		Options:  nil, // или добавьте опции, если необходимо
+		Options:  nil,
 	}
 
 	// Создание соединения с базой данных
@@ -35,11 +35,13 @@ func main() {
 	userHandler := handlers.NewUserHandler(authService)
 
 	mux := routes.InitRoutes(userHandler)
-	corsObj := gorillaHandlers.AllowedOrigins([]string{"*"}) // Разрешить все источники
-	corsHeaders := gorillaHandlers.AllowedHeaders([]string{"Content-Type", "Accept"})
-	corsMethods := gorillaHandlers.AllowedMethods([]string{"POST", "OPTIONS"})
 
-	// Запуск сервера с CORS
+	corsHandler := gorillaHandlers.CORS(
+		gorillaHandlers.AllowedOrigins([]string{"*"}), // Разрешить все домены, но лучше указать конкретные
+		gorillaHandlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		gorillaHandlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+	)
+
 	fmt.Println("Запуск сервера на порту 8080 http://localhost:8080/")
-	log.Fatal(http.ListenAndServe(":8080", gorillaHandlers.CORS(corsObj, corsHeaders, corsMethods)(mux)))
+	log.Fatal(http.ListenAndServe(":8080", corsHandler(mux)))
 }

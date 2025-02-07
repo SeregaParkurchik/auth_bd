@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -16,33 +16,35 @@ const userTypeKey contextKey = "userType"
 
 func (h *UserHandler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		cookie, err := r.Cookie("session_id")
-		if err != nil || cookie == nil {
+		// Извлечение токена из заголовка Authorization
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
 			http.Error(w, "Токен не предоставлен", http.StatusUnauthorized)
 			return
 		}
 
-		tokenString := cookie.Value
+		// Проверка формата токена
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == authHeader { // Если токен не был найден
+			http.Error(w, "Неверный формат токена", http.StatusUnauthorized)
+			return
+		}
 
+		// Далее идет проверка токена...
 		claims := &auth.TokenClaims{}
-		jwt_token, err := jwt.ParseWithClaims(tokenString, claims, func(jwt_token *jwt.Token) (interface{}, error) {
-			if _, ok := jwt_token.Method.(*jwt.SigningMethodHMAC); !ok {
+		jwtToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("неверный метод подписи")
 			}
 			return auth.SecretKey, nil
 		})
 
-		if err != nil || !jwt_token.Valid {
+		if err != nil || !jwtToken.Valid {
 			http.Error(w, "Неверный токен", http.StatusUnauthorized)
 			return
 		}
 
-		if claims.EXP < time.Now().Unix() {
-			http.Error(w, "Токен истек", http.StatusUnauthorized)
-			return
-		}
-
+		// Если токен валиден, добавляем информацию о пользователе в контекст
 		ctx := context.WithValue(r.Context(), userTypeKey, claims.User.UserType)
 		r = r.WithContext(ctx)
 

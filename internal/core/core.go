@@ -6,6 +6,7 @@ import (
 	"avito_test/internal/storage"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -13,6 +14,7 @@ import (
 type Interface interface {
 	Register(ctx context.Context, user *models.User) (string, error)
 	Login(ctx context.Context, user *models.User) (string, error)
+	HouseCreate(ctx context.Context, newHouse *models.House) (*models.House, error)
 }
 
 type service struct {
@@ -67,4 +69,10 @@ func (s *service) Login(ctx context.Context, user *models.User) (string, error) 
 		return "", fmt.Errorf("не удалось обновить токен")
 	}
 	return tokenString, nil
+}
+
+func (s *service) HouseCreate(ctx context.Context, newHouse *models.House) (*models.House, error) {
+	newHouse.CreatedAt = time.Now()
+	newHouse.UpdatedAt = time.Now()
+	return newHouse, nil
 }
